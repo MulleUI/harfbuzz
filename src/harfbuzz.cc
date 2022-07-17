@@ -48,7 +48,7 @@
 #include "hb-ucd.cc"
 #include "hb-unicode.cc"
 #include "hb-glib.cc"
-#include "hb-ft.cc"
+// #include "hb-ft.cc"   // @MulleUI@ removed
 #include "hb-graphite2.cc"
 #include "hb-uniscribe.cc"
 #include "hb-gdi.cc"
