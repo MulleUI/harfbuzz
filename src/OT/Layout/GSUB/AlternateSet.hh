@@ -57,7 +57,22 @@ struct AlternateSet
 
     if (unlikely (alt_index > count || alt_index == 0)) return_trace (false);
 
+    if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
+    {
+      c->buffer->sync_so_far ();
+      c->buffer->message (c->font,
+			  "replacing glyph at %u (alternate substitution)",
+			  c->buffer->idx);
+    }
+
     c->replace_glyph (alternates[alt_index - 1]);
+
+    if (HB_BUFFER_MESSAGE_MORE && c->buffer->messaging ())
+    {
+      c->buffer->message (c->font,
+			  "replaced glyph at %u (alternate substitution)",
+			  c->buffer->idx - 1u);
+    }
 
     return_trace (true);
   }
@@ -69,11 +84,24 @@ struct AlternateSet
   {
     if (alternates.len && alternate_count)
     {
-      + alternates.sub_array (start_offset, alternate_count)
+      + alternates.as_array ().sub_array (start_offset, alternate_count)
       | hb_sink (hb_array (alternate_glyphs, *alternate_count))
       ;
     }
     return alternates.len;
+  }
+
+  void
+  collect_alternates (hb_codepoint_t gid,
+		      hb_map_t  *alternate_count /* IN/OUT */,
+		      hb_map_t  *alternate_glyphs /* IN/OUT */) const
+  {
+    + hb_enumerate (alternates)
+    | hb_map ([gid] (hb_pair_t<unsigned, hb_codepoint_t> _) { return hb_pair (gid + (_.first << 24), _.second); })
+    | hb_apply ([&] (const hb_pair_t<hb_codepoint_t, hb_codepoint_t> &p) -> void
+		{ _hb_collect_glyph_alternates_add (p.first, p.second,
+						    alternate_count, alternate_glyphs); })
+    ;
   }
 
   template <typename Iterator,

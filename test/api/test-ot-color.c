@@ -102,6 +102,7 @@ static hb_face_t *cbdt = NULL;
 static hb_face_t *sbix = NULL;
 static hb_face_t *svg = NULL;
 static hb_face_t *empty = NULL;
+static hb_face_t *colrv1 = NULL;
 
 #define assert_color_rgba(colors, i, r, g, b, a) G_STMT_START {	\
   const hb_color_t *_colors = (colors); \
@@ -347,37 +348,58 @@ test_hb_ot_color_glyph_get_layers (void)
 static void
 test_hb_ot_color_has_data (void)
 {
-  g_assert (hb_ot_color_has_layers (empty) == FALSE);
-  g_assert (hb_ot_color_has_layers (cpal_v0) == TRUE);
-  g_assert (hb_ot_color_has_layers (cpal_v1) == TRUE);
-  g_assert (hb_ot_color_has_layers (cpal) == TRUE);
-  g_assert (hb_ot_color_has_layers (cbdt) == FALSE);
-  g_assert (hb_ot_color_has_layers (sbix) == FALSE);
-  g_assert (hb_ot_color_has_layers (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_layers (empty) == FALSE);
+  g_assert_true (hb_ot_color_has_layers (cpal_v0) == TRUE);
+  g_assert_true (hb_ot_color_has_layers (cpal_v1) == TRUE);
+  g_assert_true (hb_ot_color_has_layers (cpal) == TRUE);
+  g_assert_true (hb_ot_color_has_layers (cbdt) == FALSE);
+  g_assert_true (hb_ot_color_has_layers (sbix) == FALSE);
+  g_assert_true (hb_ot_color_has_layers (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_layers (colrv1) == FALSE);
 
-  g_assert (hb_ot_color_has_palettes (empty) == FALSE);
-  g_assert (hb_ot_color_has_palettes (cpal_v0) == TRUE);
-  g_assert (hb_ot_color_has_palettes (cpal_v1) == TRUE);
-  g_assert (hb_ot_color_has_palettes (cpal) == TRUE);
-  g_assert (hb_ot_color_has_palettes (cbdt) == FALSE);
-  g_assert (hb_ot_color_has_palettes (sbix) == FALSE);
-  g_assert (hb_ot_color_has_palettes (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_palettes (empty) == FALSE);
+  g_assert_true (hb_ot_color_has_palettes (cpal_v0) == TRUE);
+  g_assert_true (hb_ot_color_has_palettes (cpal_v1) == TRUE);
+  g_assert_true (hb_ot_color_has_palettes (cpal) == TRUE);
+  g_assert_true (hb_ot_color_has_palettes (cbdt) == FALSE);
+  g_assert_true (hb_ot_color_has_palettes (sbix) == FALSE);
+  g_assert_true (hb_ot_color_has_palettes (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_palettes (colrv1) == TRUE);
 
-  g_assert (hb_ot_color_has_svg (empty) == FALSE);
-  g_assert (hb_ot_color_has_svg (cpal_v0) == FALSE);
-  g_assert (hb_ot_color_has_svg (cpal_v1) == FALSE);
-  g_assert (hb_ot_color_has_svg (cpal) == FALSE);
-  g_assert (hb_ot_color_has_svg (cbdt) == FALSE);
-  g_assert (hb_ot_color_has_svg (sbix) == FALSE);
-  g_assert (hb_ot_color_has_svg (svg) == TRUE);
+  g_assert_true (hb_ot_color_has_svg (empty) == FALSE);
+  g_assert_true (hb_ot_color_has_svg (cpal_v0) == FALSE);
+  g_assert_true (hb_ot_color_has_svg (cpal_v1) == FALSE);
+  g_assert_true (hb_ot_color_has_svg (cpal) == FALSE);
+  g_assert_true (hb_ot_color_has_svg (cbdt) == FALSE);
+  g_assert_true (hb_ot_color_has_svg (sbix) == FALSE);
+  g_assert_true (hb_ot_color_has_svg (svg) == TRUE);
+  g_assert_true (hb_ot_color_has_svg (colrv1) == FALSE);
 
-  g_assert (hb_ot_color_has_png (empty) == FALSE);
-  g_assert (hb_ot_color_has_png (cpal_v0) == FALSE);
-  g_assert (hb_ot_color_has_png (cpal_v1) == FALSE);
-  g_assert (hb_ot_color_has_png (cpal) == FALSE);
-  g_assert (hb_ot_color_has_png (cbdt) == TRUE);
-  g_assert (hb_ot_color_has_png (sbix) == TRUE);
-  g_assert (hb_ot_color_has_png (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_png (empty) == FALSE);
+  g_assert_true (hb_ot_color_has_png (cpal_v0) == FALSE);
+  g_assert_true (hb_ot_color_has_png (cpal_v1) == FALSE);
+  g_assert_true (hb_ot_color_has_png (cpal) == FALSE);
+  g_assert_true (hb_ot_color_has_png (cbdt) == TRUE);
+  g_assert_true (hb_ot_color_has_png (sbix) == TRUE);
+  g_assert_true (hb_ot_color_has_png (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_png (colrv1) == FALSE);
+
+  g_assert_true (hb_ot_color_has_paint (empty) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (cpal_v0) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (cpal_v1) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (cpal) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (cbdt) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (sbix) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (svg) == FALSE);
+  g_assert_true (hb_ot_color_has_paint (colrv1) == TRUE);
+}
+
+static void
+test_hb_ot_color_glyph_has_paint (void)
+{
+  g_assert_true (hb_ot_color_has_paint (colrv1));
+  g_assert_true (hb_ot_color_glyph_has_paint (colrv1, 10));
+  g_assert_true (!hb_ot_color_glyph_has_paint (colrv1, 20));
 }
 
 static void
@@ -388,17 +410,17 @@ test_hb_ot_color_svg (void)
   const char *data;
 
   blob = hb_ot_color_glyph_reference_svg (svg, 0);
-  g_assert (hb_blob_get_length (blob) == 0);
+  g_assert_true (hb_blob_get_length (blob) == 0);
 
   blob = hb_ot_color_glyph_reference_svg (svg, 1);
   data = hb_blob_get_data (blob, &length);
   g_assert_cmpuint (length, ==, 146);
-  g_assert (strncmp (data, "<?xml", 4) == 0);
-  g_assert (strncmp (data + 140, "</svg>", 5) == 0);
+  g_assert_true (strncmp (data, "<?xml", 4) == 0);
+  g_assert_true (strncmp (data + 140, "</svg>", 5) == 0);
   hb_blob_destroy (blob);
 
   blob = hb_ot_color_glyph_reference_svg (empty, 0);
-  g_assert (hb_blob_get_length (blob) == 0);
+  g_assert_true (hb_blob_get_length (blob) == 0);
 }
 
 
@@ -420,12 +442,12 @@ test_hb_ot_color_png (void)
   g_assert_cmpint (extents.y_bearing, ==, 0);
   g_assert_cmpint (extents.width, ==, 0);
   g_assert_cmpint (extents.height, ==, 0);
-  g_assert (hb_blob_get_length (blob) == 0);
+  g_assert_true (hb_blob_get_length (blob) == 0);
 
   blob = hb_ot_color_glyph_reference_png (sbix_font, 1);
   data = hb_blob_get_data (blob, &length);
   g_assert_cmpuint (length, ==, 224);
-  g_assert (strncmp (data + 1, "PNG", 3) == 0);
+  g_assert_true (strncmp (data + 1, "PNG", 3) == 0);
   hb_font_get_glyph_extents (sbix_font, 1, &extents);
   g_assert_cmpint (extents.x_bearing, ==, 0);
   g_assert_cmpint (extents.y_bearing, ==, 800);
@@ -437,12 +459,12 @@ test_hb_ot_color_png (void)
   /* cbdt */
   cbdt_font = hb_font_create (cbdt);
   blob = hb_ot_color_glyph_reference_png (cbdt_font, 0);
-  g_assert (hb_blob_get_length (blob) == 0);
+  g_assert_true (hb_blob_get_length (blob) == 0);
 
   blob = hb_ot_color_glyph_reference_png (cbdt_font, 1);
   data = hb_blob_get_data (blob, &length);
   g_assert_cmpuint (length, ==, 88);
-  g_assert (strncmp (data + 1, "PNG", 3) == 0);
+  g_assert_true (strncmp (data + 1, "PNG", 3) == 0);
   hb_font_get_glyph_extents (cbdt_font, 1, &extents);
   g_assert_cmpint (extents.x_bearing, ==, 0);
   g_assert_cmpint (extents.y_bearing, ==, 1024);
@@ -464,6 +486,7 @@ main (int argc, char **argv)
   cbdt = hb_test_open_font_file ("fonts/chromacheck-cbdt.ttf");
   sbix = hb_test_open_font_file ("fonts/chromacheck-sbix.ttf");
   svg = hb_test_open_font_file ("fonts/chromacheck-svg.ttf");
+  colrv1 = hb_test_open_font_file ("fonts/noto_handwriting-cff2_colr_1.otf");
   empty = hb_face_get_empty ();
   hb_test_add (test_hb_ot_color_palette_get_count);
   hb_test_add (test_hb_ot_color_palette_get_name_id_empty);
@@ -480,6 +503,8 @@ main (int argc, char **argv)
   hb_test_add (test_hb_ot_color_has_data);
   hb_test_add (test_hb_ot_color_png);
   hb_test_add (test_hb_ot_color_svg);
+  hb_test_add (test_hb_ot_color_glyph_has_paint);
+
   status = hb_test_run();
   hb_face_destroy (cpal_v0);
   hb_face_destroy (cpal_v1);
@@ -487,5 +512,6 @@ main (int argc, char **argv)
   hb_face_destroy (cbdt);
   hb_face_destroy (sbix);
   hb_face_destroy (svg);
+  hb_face_destroy (colrv1);
   return status;
 }

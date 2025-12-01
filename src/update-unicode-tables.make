@@ -19,7 +19,7 @@ hb-ot-shaper-indic-table.cc: gen-indic-table.py IndicSyllabicCategory.txt IndicP
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-tag-table.hh: gen-tag-table.py languagetags language-subtag-registry
 	./$^ > $@ || ($(RM) $@; false)
-hb-ucd-table.hh: gen-ucd-table.py ucd.nounihan.grouped.zip hb-common.h
+hb-ucd-table.hh: gen-ucd-table.py ucd.nounihan.grouped.zip hb-script-list.h
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-shaper-use-table.hh: gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt ArabicShaping.txt DerivedCoreProperties.txt UnicodeData.txt Blocks.txt Scripts.txt ms-use/IndicSyllabicCategory-Additional.txt ms-use/IndicPositionalCategory-Additional.txt
 	./$^ > $@ || ($(RM) $@; false)
@@ -29,14 +29,14 @@ hb-ot-shaper-vowel-constraints.cc: gen-vowel-constraints.py ms-use/IndicShapingI
 packtab:
 	/usr/bin/env python3 -c "import packTab" 2>/dev/null || /usr/bin/env python3 -m pip install git+https://github.com/harfbuzz/packtab
 
-ArabicShaping.txt DerivedCoreProperties.txt IndicPositionalCategory.txt IndicSyllabicCategory.txt Scripts.txt UnicodeData.txt:
+ArabicShaping.txt Blocks.txt DerivedCoreProperties.txt IndicPositionalCategory.txt IndicSyllabicCategory.txt Scripts.txt UnicodeData.txt:
 	curl -O https://unicode.org/Public/UCD/latest/ucd/$@
 emoji-data.txt:
 	curl -O https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt
 emoji-test.txt:
 	curl -O https://www.unicode.org/Public/emoji/latest/emoji-test.txt
 languagetags:
-	curl -O https://docs.microsoft.com/en-us/typography/opentype/spec/languagetags
+	curl -O https://learn.microsoft.com/en-us/typography/opentype/spec/languagetags
 language-subtag-registry:
 	curl -O https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry
 ucd.nounihan.grouped.zip:

@@ -12,7 +12,7 @@ struct SinglePos
 {
   protected:
   union {
-  HBUINT16              format;         /* Format identifier */
+  struct { HBUINT16 v; } format;        /* Format identifier */
   SinglePosFormat1      format1;
   SinglePosFormat2      format2;
   } u;
@@ -38,31 +38,30 @@ struct SinglePos
   void serialize (hb_serialize_context_t *c,
                   const SrcLookup* src,
                   Iterator glyph_val_iter_pairs,
-                  const hb_map_t *layout_variation_idx_map)
+                  const hb_hashmap_t<unsigned, hb_pair_t<unsigned, int>> *layout_variation_idx_delta_map,
+                  unsigned newFormat)
   {
-    if (unlikely (!c->extend_min (u.format))) return;
+    if (unlikely (!c->extend_min (u.format.v))) return;
     unsigned format = 2;
-    ValueFormat new_format = src->get_value_format ();
+    ValueFormat new_format;
+    new_format = newFormat;
 
     if (glyph_val_iter_pairs)
-    {
       format = get_format (glyph_val_iter_pairs);
-      new_format = src->get_value_format ().get_effective_format (+ glyph_val_iter_pairs | hb_map (hb_second));
-    }
 
-    u.format = format;
-    switch (u.format) {
+    u.format.v = format;
+    switch (u.format.v) {
     case 1: u.format1.serialize (c,
                                  src,
                                  glyph_val_iter_pairs,
                                  new_format,
-                                 layout_variation_idx_map);
+                                 layout_variation_idx_delta_map);
       return;
     case 2: u.format2.serialize (c,
                                  src,
                                  glyph_val_iter_pairs,
                                  new_format,
-                                 layout_variation_idx_map);
+                                 layout_variation_idx_delta_map);
       return;
     default:return;
     }
@@ -71,9 +70,9 @@ struct SinglePos
   template <typename context_t, typename ...Ts>
   typename context_t::return_t dispatch (context_t *c, Ts&&... ds) const
   {
-    TRACE_DISPATCH (this, u.format);
-    if (unlikely (!c->may_dispatch (this, &u.format))) return_trace (c->no_dispatch_return_value ());
-    switch (u.format) {
+    if (unlikely (!c->may_dispatch (this, &u.format.v))) return c->no_dispatch_return_value ();
+    TRACE_DISPATCH (this, u.format.v);
+    switch (u.format.v) {
     case 1: return_trace (c->dispatch (u.format1, std::forward<Ts> (ds)...));
     case 2: return_trace (c->dispatch (u.format2, std::forward<Ts> (ds)...));
     default:return_trace (c->default_return_value ());
@@ -87,8 +86,9 @@ static void
 SinglePos_serialize (hb_serialize_context_t *c,
                      const SrcLookup *src,
                      Iterator it,
-                     const hb_map_t *layout_variation_idx_map)
-{ c->start_embed<SinglePos> ()->serialize (c, src, it, layout_variation_idx_map); }
+                     const hb_hashmap_t<unsigned, hb_pair_t<unsigned, int>> *layout_variation_idx_delta_map,
+                     unsigned new_format)
+{ c->start_embed<SinglePos> ()->serialize (c, src, it, layout_variation_idx_delta_map, new_format); }
 
 
 }

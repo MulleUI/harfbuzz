@@ -74,22 +74,25 @@ export VD   = 9;
 export PLACEHOLDER = 10;
 export DOTTEDCIRCLE = 11;
 export RS    = 12;
+export MPst  = 13;
 export Repha = 14;
 export Ra    = 15;
 export CM    = 16;
 export Symbol= 17;
 export CS    = 18;
+export SMPst = 57;
 
 
 c = (C | Ra);			# is_consonant
 n = ((ZWNJ?.RS)? (N.N?)?);	# is_consonant_modifier
 z = ZWJ|ZWNJ;			# is_joiner
 reph = (Ra H | Repha);		# possible reph
+sm = SM | SMPst;
 
 cn = c.ZWJ?.n?;
 symbol = Symbol.N?;
-matra_group = z*.M.N?.H?;
-syllable_tail = (z?.SM.SM?.ZWNJ?)? (A | VD)*;
+matra_group = z*.(M | sm? MPst).N?.H?;
+syllable_tail = (z?.sm.sm?.ZWNJ?)? (A | VD)*;
 halant_group = (z?.H.(ZWJ.N?)?);
 final_halant_group = halant_group | H.ZWNJ;
 medial_group = CM?;
@@ -109,6 +112,7 @@ main := |*
 	vowel_syllable		=> { found_syllable (indic_vowel_syllable); };
 	standalone_cluster	=> { found_syllable (indic_standalone_cluster); };
 	symbol_cluster		=> { found_syllable (indic_symbol_cluster); };
+	SMPst			=> { found_syllable (indic_non_indic_cluster); };
 	broken_cluster		=> { found_syllable (indic_broken_cluster); buffer->scratch_flags |= HB_BUFFER_SCRATCH_FLAG_HAS_BROKEN_SYLLABLE; };
 	other			=> { found_syllable (indic_non_indic_cluster); };
 *|;
@@ -118,11 +122,11 @@ main := |*
 
 #define found_syllable(syllable_type) \
   HB_STMT_START { \
-    if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
+    if (0) fprintf (stderr, "syllable %u..%u %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
       info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
-    if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
+    if (syllable_serial == 16) syllable_serial = 1; \
   } HB_STMT_END
 
 inline void

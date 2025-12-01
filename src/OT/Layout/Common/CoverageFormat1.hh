@@ -41,11 +41,11 @@ struct CoverageFormat1_3
 {
   friend struct Coverage;
 
-  protected:
+  public:
   HBUINT16      coverageFormat; /* Format identifier--format = 1 */
   SortedArray16Of<typename Types::HBGlyphID>
                 glyphArray;     /* Array of GlyphIDs--in numerical order */
-  public:
+
   DEFINE_SIZE_ARRAY (4, glyphArray);
 
   private:
@@ -62,6 +62,11 @@ struct CoverageFormat1_3
     return i;
   }
 
+  unsigned get_population () const
+  {
+    return glyphArray.len;
+  }
+
   template <typename Iterator,
       hb_requires (hb_is_sorted_source_of (Iterator, hb_codepoint_t))>
   bool serialize (hb_serialize_context_t *c, Iterator glyphs)
@@ -72,7 +77,14 @@ struct CoverageFormat1_3
 
   bool intersects (const hb_set_t *glyphs) const
   {
-    /* TODO Speed up, using hb_set_next() and bsearch()? */
+    if (glyphArray.len > glyphs->get_population () * hb_bit_storage ((unsigned) glyphArray.len))
+    {
+      for (auto g : *glyphs)
+        if (get_coverage (g) != NOT_COVERED)
+	  return true;
+      return false;
+    }
+
     for (const auto& g : glyphArray.as_array ())
       if (glyphs->has (g))
         return true;
@@ -81,13 +93,17 @@ struct CoverageFormat1_3
   bool intersects_coverage (const hb_set_t *glyphs, unsigned int index) const
   { return glyphs->has (glyphArray[index]); }
 
-  void intersected_coverage_glyphs (const hb_set_t *glyphs, hb_set_t *intersect_glyphs) const
+  template <typename IterableOut,
+	    hb_requires (hb_is_sink_of (IterableOut, hb_codepoint_t))>
+  void intersect_set (const hb_set_t &glyphs, IterableOut&& intersect_glyphs) const
   {
     unsigned count = glyphArray.len;
     for (unsigned i = 0; i < count; i++)
-      if (glyphs->has (glyphArray[i]))
-        intersect_glyphs->add (glyphArray[i]);
+      if (glyphs.has (glyphArray[i]))
+        intersect_glyphs << glyphArray[i];
   }
+
+  unsigned cost () const { return hb_bit_storage ((unsigned) glyphArray.len); /* bsearch cost */ }
 
   template <typename set_t>
   bool collect_coverage (set_t *glyphs) const
@@ -98,9 +114,8 @@ struct CoverageFormat1_3
   struct iter_t
   {
     void init (const struct CoverageFormat1_3 &c_) { c = &c_; i = 0; }
-    void fini () {}
-    bool more () const { return i < c->glyphArray.len; }
-    void next () { i++; }
+    bool __more__ () const { return i < c->glyphArray.len; }
+    void __next__ () { i++; }
     hb_codepoint_t get_glyph () const { return c->glyphArray[i]; }
     bool operator != (const iter_t& o) const
     { return i != o.i; }
