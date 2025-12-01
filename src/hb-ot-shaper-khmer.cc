@@ -89,11 +89,11 @@ set_khmer_properties (hb_glyph_info_t &info)
   info.khmer_category() = (khmer_category_t) (type & 0xFFu);
 }
 
-static void
+static bool
 setup_syllables_khmer (const hb_ot_shape_plan_t *plan,
 		       hb_font_t *font,
 		       hb_buffer_t *buffer);
-static void
+static bool
 reorder_khmer (const hb_ot_shape_plan_t *plan,
 	       hb_font_t *font,
 	       hb_buffer_t *buffer);
@@ -141,12 +141,6 @@ override_features_khmer (hb_ot_shape_planner_t *plan)
    * typographical correctness.", hence in overrides... */
   map->enable_feature (HB_TAG('c','l','i','g'));
 
-  /* Uniscribe does not apply 'kern' in Khmer. */
-  if (hb_options ().uniscribe_bug_compatible)
-  {
-    map->disable_feature (HB_TAG('k','e','r','n'));
-  }
-
   map->disable_feature (HB_TAG('l','i','g','a'));
 }
 
@@ -192,7 +186,7 @@ setup_masks_khmer (const hb_ot_shape_plan_t *plan HB_UNUSED,
     set_khmer_properties (info[i]);
 }
 
-static void
+static bool
 setup_syllables_khmer (const hb_ot_shape_plan_t *plan HB_UNUSED,
 		       hb_font_t *font HB_UNUSED,
 		       hb_buffer_t *buffer)
@@ -201,6 +195,7 @@ setup_syllables_khmer (const hb_ot_shape_plan_t *plan HB_UNUSED,
   find_syllables_khmer (buffer);
   foreach_syllable (buffer, start, end)
     buffer->unsafe_to_break (start, end);
+  return false;
 }
 
 
@@ -303,23 +298,27 @@ reorder_syllable_khmer (const hb_ot_shape_plan_t *plan,
   }
 }
 
-static void
+static bool
 reorder_khmer (const hb_ot_shape_plan_t *plan,
 	       hb_font_t *font,
 	       hb_buffer_t *buffer)
 {
+  bool ret = false;
   if (buffer->message (font, "start reordering khmer"))
   {
-    hb_syllabic_insert_dotted_circles (font, buffer,
-				       khmer_broken_cluster,
-				       K_Cat(DOTTEDCIRCLE),
-				       (unsigned) -1);
+    if (hb_syllabic_insert_dotted_circles (font, buffer,
+					   khmer_broken_cluster,
+					   K_Cat(DOTTEDCIRCLE),
+					   (unsigned) -1))
+      ret = true;
 
     foreach_syllable (buffer, start, end)
       reorder_syllable_khmer (plan, font->face, buffer, start, end);
     (void) buffer->message (font, "end reordering khmer");
   }
   HB_BUFFER_DEALLOCATE_VAR (buffer, khmer_category);
+
+  return ret;
 }
 
 

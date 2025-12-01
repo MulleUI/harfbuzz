@@ -61,23 +61,23 @@ struct shape_consumer_t : shape_options_t
 
     for (unsigned int n = num_iterations; n; n--)
     {
-      const char *error = nullptr;
-
-      populate_buffer (buffer, text, text_len, app.text_before, app.text_after);
+      populate_buffer (buffer, text, text_len, app.text_before, app.text_after, app.font);
       if (n == 1)
 	output.consume_text (buffer, text, text_len, utf8_clusters);
+
+      const char *error = nullptr;
       if (!shape (app.font, buffer, &error))
       {
 	failed = true;
 	output.error (error);
-	if (hb_buffer_get_content_type (buffer) == HB_BUFFER_CONTENT_TYPE_GLYPHS)
-	  break;
-	else
-	  return true;
+	return true;
       }
     }
 
-    output.consume_glyphs (buffer, text, text_len, utf8_clusters);
+    if (glyphs)
+      output.consume_glyphs (buffer, nullptr, 0, false);
+    else
+      output.consume_glyphs (buffer, text, text_len, utf8_clusters);
     return true;
   }
   template <typename app_t>

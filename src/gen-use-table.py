@@ -15,6 +15,22 @@ Input files:
 * ms-use/IndicPositionalCategory-Additional.txt
 """
 
+import packTab
+
+import sys
+import logging
+
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+
+if len(sys.argv) > 1 and sys.argv[1] == "--rust":
+    del sys.argv[1]
+    logging.info("Generating Rust code...")
+    language = "rust"
+else:
+    logging.info("Generating C code...")
+    language = "c"
+language = packTab.languages[language]
+
 import sys
 
 if len (sys.argv) != 10:
@@ -105,6 +121,7 @@ property_names = [
 	'Nukta',
 	'Virama',
 	'Pure_Killer',
+	'Reordering_Killer',
 	'Invisible_Stacker',
 	'Vowel_Independent',
 	'Vowel_Dependent',
@@ -134,8 +151,13 @@ property_names = [
 	'Number_Joiner',
 	'Number',
 	'Brahmi_Joining_Number',
+	'Symbol_Modifier',
 	'Hieroglyph',
 	'Hieroglyph_Joiner',
+	'Hieroglyph_Mark_Begin',
+	'Hieroglyph_Mark_End',
+	'Hieroglyph_Mirror',
+	'Hieroglyph_Modifier',
 	'Hieroglyph_Segment_Begin',
 	'Hieroglyph_Segment_End',
 	# Indic_Positional_Category
@@ -214,8 +236,7 @@ def is_CONS_MED(U, UISC, UDI, UGC, AJT):
 	return (UISC == Consonant_Medial and UGC != Lo or
 		UISC == Consonant_Initial_Postfixed)
 def is_CONS_MOD(U, UISC, UDI, UGC, AJT):
-	return (UISC in [Nukta, Gemination_Mark, Consonant_Killer] and
-		not is_SYM_MOD(U, UISC, UDI, UGC, AJT))
+	return UISC in [Nukta, Gemination_Mark, Consonant_Killer]
 def is_CONS_SUB(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_Subjoined and UGC != Lo
 def is_CONS_WITH_STACKER(U, UISC, UDI, UGC, AJT):
@@ -231,10 +252,14 @@ def is_HIEROGLYPH(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph
 def is_HIEROGLYPH_JOINER(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph_Joiner
+def is_HIEROGLYPH_MIRROR(U, UISC, UDI, UGC, AJT):
+	return UISC == Hieroglyph_Mirror
+def is_HIEROGLYPH_MOD(U, UISC, UDI, UGC, AJT):
+	return UISC == Hieroglyph_Modifier
 def is_HIEROGLYPH_SEGMENT_BEGIN(U, UISC, UDI, UGC, AJT):
-	return UISC == Hieroglyph_Segment_Begin
+	return UISC in [Hieroglyph_Mark_Begin, Hieroglyph_Segment_Begin]
 def is_HIEROGLYPH_SEGMENT_END(U, UISC, UDI, UGC, AJT):
-	return UISC == Hieroglyph_Segment_End
+	return UISC in [Hieroglyph_Mark_End, Hieroglyph_Segment_End]
 def is_INVISIBLE_STACKER(U, UISC, UDI, UGC, AJT):
 	# Split off of HALANT
 	return (UISC == Invisible_Stacker
@@ -251,13 +276,15 @@ def is_OTHER(U, UISC, UDI, UGC, AJT):
 		and not is_SYM_MOD(U, UISC, UDI, UGC, AJT)
 		and not is_Word_Joiner(U, UISC, UDI, UGC, AJT)
 	)
+def is_REORDERING_KILLER(U, UISC, UDI, UGC, AJT):
+	return UISC == Reordering_Killer
 def is_REPHA(U, UISC, UDI, UGC, AJT):
 	return UISC in [Consonant_Preceding_Repha, Consonant_Prefixed]
 def is_SAKOT(U, UISC, UDI, UGC, AJT):
 	# Split off of HALANT
 	return U == 0x1A60
 def is_SYM_MOD(U, UISC, UDI, UGC, AJT):
-	return U in [0x1B6B, 0x1B6C, 0x1B6D, 0x1B6E, 0x1B6F, 0x1B70, 0x1B71, 0x1B72, 0x1B73]
+	return UISC == Symbol_Modifier
 def is_VOWEL(U, UISC, UDI, UGC, AJT):
 	return (UISC == Pure_Killer or
 		UGC != Lo and UISC in [Vowel, Vowel_Dependent])
@@ -287,11 +314,14 @@ use_mapping = {
 	'HN':	is_HALANT_NUM,
 	'IS':	is_INVISIBLE_STACKER,
 	'G':	is_HIEROGLYPH,
+	'HM':	is_HIEROGLYPH_MOD,
+	'HR':	is_HIEROGLYPH_MIRROR,
 	'J':	is_HIEROGLYPH_JOINER,
 	'SB':	is_HIEROGLYPH_SEGMENT_BEGIN,
 	'SE':	is_HIEROGLYPH_SEGMENT_END,
 	'ZWNJ':	is_ZWNJ,
 	'O':	is_OTHER,
+	'RK':	is_REORDERING_KILLER,
 	'R':	is_REPHA,
 	'Sk':	is_SAKOT,
 	'SM':	is_SYM_MOD,
@@ -333,6 +363,8 @@ use_positions = {
 		'Blw': [Bottom],
 	},
 	'H': None,
+	'HM': None,
+	'HR': None,
 	'HVM': None,
 	'IS': None,
 	'B': None,
@@ -342,6 +374,7 @@ use_positions = {
 		'Pst': [Not_Applicable],
 	},
 	'R': None,
+	'RK': None,
 	'SUB': None,
 }
 
@@ -359,9 +392,6 @@ def map_to_use(data):
 		# TODO: These don't have UISC assigned in Unicode 13.0.0, but have UIPC
 		if 0x0F18 <= U <= 0x0F19 or 0x0F3E <= U <= 0x0F3F: UISC = Vowel_Dependent
 
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/627
-		if 0x1BF2 <= U <= 0x1BF3: UISC = Nukta; UIPC = Bottom
-
 		# TODO: U+1CED should only be allowed after some of
 		# the nasalization marks, maybe only for U+1CE9..U+1CF1.
 		if U == 0x1CED: UISC = Tone_Mark
@@ -372,25 +402,12 @@ def map_to_use(data):
 
 		# Resolve Indic_Positional_Category
 
-		# TODO: These should die, but have UIPC in Unicode 13.0.0
-		if U in [0x953, 0x954]: UIPC = Not_Applicable
-
-		# TODO: These are not in USE's override list that we have, nor are they in Unicode 13.0.0
-		if 0xA926 <= U <= 0xA92A: UIPC = Top
 		# TODO: https://github.com/harfbuzz/harfbuzz/pull/1037
 		#  and https://github.com/harfbuzz/harfbuzz/issues/1631
 		if U in [0x11302, 0x11303, 0x114C1]: UIPC = Top
-		if 0x1CF8 <= U <= 0x1CF9: UIPC = Top
 
-		# TODO: https://github.com/harfbuzz/harfbuzz/issues/3550
-		if U == 0x10A38: UIPC = Bottom
-
-		# TODO: https://github.com/harfbuzz/harfbuzz/pull/982
-		# also  https://github.com/harfbuzz/harfbuzz/issues/1012
-		if 0x1112A <= U <= 0x1112B: UIPC = Top
-		if 0x11131 <= U <= 0x11132: UIPC = Top
-
-		assert (UIPC in [Not_Applicable, Visual_Order_Left] or U == 0x0F7F or
+		assert (UIPC in [Not_Applicable, Visual_Order_Left] or
+			U in {0x0F7F, 0x11A3A} or
 			USE in use_positions), "%s %s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UDI, UGC, AJT)
 
 		pos_mapping = use_positions.get(USE, None)
@@ -417,86 +434,100 @@ for h in headers:
 		print (" * %s" % (l.strip()))
 print (" */")
 print ()
-print ("#ifndef HB_OT_SHAPER_USE_TABLE_HH")
-print ("#define HB_OT_SHAPER_USE_TABLE_HH")
-print ()
-print ('#include "hb.hh"')
-print ()
-print ('#include "hb-ot-shaper-use-machine.hh"')
-print ()
+if language.name == "c":
+    print ("#ifndef HB_OT_SHAPER_USE_TABLE_HH")
+    print ("#define HB_OT_SHAPER_USE_TABLE_HH")
+    print ()
+    print ('#include "hb.hh"')
+    print ()
+    print ('#include "hb-ot-shaper-use-machine.hh"')
+    print ()
 
-total = 0
-used = 0
-last_block = None
-def print_block (block, start, end, use_data):
-	global total, used, last_block
-	if block and block != last_block:
-		print ()
-		print ()
-		print ("  /* %s */" % block)
-		if start % 16:
-			print (' ' * (20 + (start % 16 * 6)), end='')
-	num = 0
-	assert start % 8 == 0
-	assert (end+1) % 8 == 0
-	for u in range (start, end+1):
-		if u % 16 == 0:
-			print ()
-			print ("  /* %04X */" % u, end='')
-		if u in use_data:
-			num += 1
-		d = use_data.get (u)
-		if d is not None:
-			d = d[0]
-		elif u in unicode_data[4]:
-			d = 'O'
-		else:
-			d = 'WJ'
-		print ("%6s," % d, end='')
+    print ('#pragma GCC diagnostic push')
+    print ('#pragma GCC diagnostic ignored "-Wunused-macros"')
+    for k,v in sorted(use_mapping.items()):
+        if k in use_positions and use_positions[k]: continue
+        print ("#define %s	USE(%s)	/* %s */" % (k, k, v.__name__[3:]))
+    for k,v in sorted(use_positions.items()):
+        if not v: continue
+        for suf in v.keys():
+            tag = k + suf
+            print ("#define %s	USE(%s)" % (tag, tag))
+    print ('#pragma GCC diagnostic pop')
+    print ("")
 
-	total += end - start + 1
-	used += num
-	if block:
-		last_block = block
+elif language.name == "rust":
+    print()
+    print("#![allow(unused_parens)]")
+    print("#![allow(clippy::unnecessary_cast, clippy::unreadable_literal, clippy::double_parens)]")
+    print()
+    print("use super::ot_shaper_use::category::*;")
+    print()
+else:
+    assert False, "Unknown language: %s" % language.name
 
 uu = sorted (use_data.keys ())
 
-last = -100000
-num = 0
-offset = 0
-starts = []
-ends = []
-print ('#pragma GCC diagnostic push')
-print ('#pragma GCC diagnostic ignored "-Wunused-macros"')
-for k,v in sorted(use_mapping.items()):
-	if k in use_positions and use_positions[k]: continue
-	print ("#define %s	USE(%s)	/* %s */" % (k, k, v.__name__[3:]))
-for k,v in sorted(use_positions.items()):
-	if not v: continue
-	for suf in v.keys():
-		tag = k + suf
-		print ("#define %s	USE(%s)" % (tag, tag))
-print ('#pragma GCC diagnostic pop')
-print ("")
-
-
-import packTab
 data = {u:v[0] for u,v in use_data.items()}
-code = packTab.Code('hb_use')
-sol = packTab.pack_table(data, compression=5, default='O')
-sol.genCode(code, f'get_category')
-code.print_c(linkage='static inline')
 
-print ()
-for k in sorted(use_mapping.keys()):
-	if k in use_positions and use_positions[k]: continue
-	print ("#undef %s" % k)
-for k,v in sorted(use_positions.items()):
-	if not v: continue
-	for suf in v.keys():
-		tag = k + suf
-		print ("#undef %s" % tag)
-print ()
-print ()
-print ("#endif /* HB_OT_SHAPER_USE_TABLE_HH */")
+if language.name == "c":
+    private = True
+elif language.name == "rust":
+    private = False
+    language.public_function_linkage = "pub(crate)"
+else:
+    assert False, "Unknown language: %s" % language.name
+
+
+DEFAULT = "DEFAULT"
+COMPACT = "COMPACT"
+
+compression_level = {
+    DEFAULT: 5,
+    COMPACT: 9,
+}
+
+modes = {}
+if language.name == "c":
+    modes[DEFAULT] = "#ifndef HB_OPTIMIZE_SIZE"
+    modes[COMPACT] = "#else"
+    modes[None] = "#endif"
+else:
+    modes[DEFAULT] = ""
+
+for step, text in modes.items():
+    print()
+    if text:
+        print(text)
+        print()
+    if step is None:
+        continue
+
+    compression = compression_level[step]
+    logging.info("  Compression=%d:" % compression)
+
+    code = packTab.Code('hb_use')
+    sol = packTab.pack_table(data, compression=compression, default='O')
+    logging.info('      FullCost=%d' % (sol.fullCost))
+    sol.genCode(code, f'get_category', language=language, private=private)
+    code.print_code(language=language, private=private)
+    print ()
+
+if language.name == "c":
+    print ()
+    for k in sorted(use_mapping.keys()):
+        if k in use_positions and use_positions[k]: continue
+        print ("#undef %s" % k)
+    for k,v in sorted(use_positions.items()):
+        if not v: continue
+        for suf in v.keys():
+            tag = k + suf
+            print ("#undef %s" % tag)
+    print ()
+    print ()
+    print ("#endif /* HB_OT_SHAPER_USE_TABLE_HH */")
+elif language.name == "rust":
+    pass
+else:
+    assert False, "Unknown language: %s" % language.name
 print ("/* == End of generated table == */")

@@ -164,7 +164,7 @@ typedef enum
  * @HB_UNICODE_COMBINING_CLASS_CCC122: [Lao]
  * @HB_UNICODE_COMBINING_CLASS_CCC129: [Tibetan]
  * @HB_UNICODE_COMBINING_CLASS_CCC130: [Tibetan]
- * @HB_UNICODE_COMBINING_CLASS_CCC133: [Tibetan]
+ * @HB_UNICODE_COMBINING_CLASS_CCC132: [Tibetan] Since: 7.2.0
  * @HB_UNICODE_COMBINING_CLASS_ATTACHED_BELOW_LEFT: Marks attached at the bottom left
  * @HB_UNICODE_COMBINING_CLASS_ATTACHED_BELOW: Marks attached directly below
  * @HB_UNICODE_COMBINING_CLASS_ATTACHED_ABOVE: Marks attached directly above
@@ -246,7 +246,7 @@ typedef enum
   /* Tibetan */
   HB_UNICODE_COMBINING_CLASS_CCC129	= 129,
   HB_UNICODE_COMBINING_CLASS_CCC130	= 130,
-  HB_UNICODE_COMBINING_CLASS_CCC133	= 132,
+  HB_UNICODE_COMBINING_CLASS_CCC132	= 132,
 
 
   HB_UNICODE_COMBINING_CLASS_ATTACHED_BELOW_LEFT	= 200,
@@ -317,8 +317,8 @@ hb_unicode_funcs_set_user_data (hb_unicode_funcs_t *ufuncs,
 
 
 HB_EXTERN void *
-hb_unicode_funcs_get_user_data (hb_unicode_funcs_t *ufuncs,
-				hb_user_data_key_t *key);
+hb_unicode_funcs_get_user_data (const hb_unicode_funcs_t *ufuncs,
+				hb_user_data_key_t       *key);
 
 
 HB_EXTERN void
